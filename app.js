@@ -51,7 +51,7 @@ app.post('/', async (req, res) => {
     console.log('✉️ Texto:', text);
 
     // Respuesta con plantilla
-    await sendTemplateMessage(from, 'saludo_inicial');
+    await sendTemplateMessage(from, 'saludo_de_prueba');
 
     res.sendStatus(200);
   } catch (error) {
@@ -98,5 +98,4 @@ async function sendTemplateMessage(to, templateName) {
 app.listen(port, () => {
   console.log(`🚀 Server running on port ${port}`);
 });
-
 
