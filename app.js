@@ -1,6 +1,9 @@
 // Import Express.js
 const express = require('express');
 
+// fetch (compatible con Node < 18)
+const fetch = global.fetch || require('node-fetch');
+
 // Create an Express app
 const app = express();
 
@@ -11,27 +14,89 @@ app.use(express.json());
 const port = process.env.PORT || 3000;
 const verifyToken = process.env.VERIFY_TOKEN;
 
-// Route for GET requests
+/**
+ * =====================================================
+ * GET /  -> Verificación del Webhook (Meta)
+ * =====================================================
+ */
 app.get('/', (req, res) => {
-  const { 'hub.mode': mode, 'hub.challenge': challenge, 'hub.verify_token': token } = req.query;
+  const {
+    'hub.mode': mode,
+    'hub.challenge': challenge,
+    'hub.verify_token': token
+  } = req.query;
 
   if (mode === 'subscribe' && token === verifyToken) {
-    console.log('WEBHOOK VERIFIED');
-    res.status(200).send(challenge);
-  } else {
-    res.status(403).end();
+    console.log('✅ WEBHOOK VERIFIED');
+    return res.status(200).send(challenge);
   }
+
+  return res.sendStatus(403);
 });
 
-// Route for POST requests
-app.post('/', (req, res) => {
-  const timestamp = new Date().toISOString().replace('T', ' ').slice(0, 19);
-  console.log(`\n\nWebhook received ${timestamp}\n`);
-  console.log(JSON.stringify(req.body, null, 2));
-  res.status(200).end();
+/**
+ * =====================================================
+ * POST / -> Recibir mensajes y responder
+ * =====================================================
+ */
+app.post('/', async (req, res) => {
+  const entry = req.body.entry?.[0];
+  const changes = entry?.changes?.[0];
+  const value = changes?.value;
+  const message = value?.messages?.[0];
+
+  // Si no hay mensaje, responder OK
+  if (!message) {
+    return res.sendStatus(200);
+  }
+
+  const from = message.from;       // número del usuario
+  const text = message.text?.body; // texto recibido
+
+  console.log('📩 Mensaje recibido de:', from);
+  console.log('✉️ Texto:', text);
+
+  // Respuesta automática
+  await sendMessage(
+    from,
+    'Hola 👋 gracias por escribirnos.\nEn un momento te atendemos.'
+  );
+
+  res.sendStatus(200);
 });
 
-// Start the server
+/**
+ * =====================================================
+ * Función para enviar mensajes por WhatsApp Cloud API
+ * =====================================================
+ */
+async function sendMessage(to, text) {
+  try {
+    await fetch(
+      `https://graph.facebook.com/v19.0/${process.env.PHONE_NUMBER_ID}/messages`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${process.env.ACCESS_TOKEN}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          messaging_product: 'whatsapp',
+          to,
+          text: { body: text }
+        })
+      }
+    );
+  } catch (error) {
+    console.error('❌ Error enviando mensaje:', error);
+  }
+}
+
+/**
+ * =====================================================
+ * Start the server
+ * =====================================================
+ */
 app.listen(port, () => {
-  console.log(`\nListening on port ${port}\n`);
+  console.log(`🚀 Server running on port ${port}`);
 });
