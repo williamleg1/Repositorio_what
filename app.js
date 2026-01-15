@@ -50,11 +50,8 @@ app.post('/', async (req, res) => {
     console.log('📩 Mensaje de:', from);
     console.log('✉️ Texto:', text);
 
-    // Auto reply
-    await sendMessage(
-      from,
-      'Hola 👋\nGracias por escribirnos.\nEn un momento te atenderemos.'
-    );
+    // Respuesta con plantilla
+    await sendTemplateMessage(from, 'saludo_inicial');
 
     res.sendStatus(200);
   } catch (error) {
@@ -64,27 +61,35 @@ app.post('/', async (req, res) => {
 });
 
 // -------------------------------
-// SEND MESSAGE FUNCTION
+// SEND TEMPLATE MESSAGE FUNCTION
 // -------------------------------
-async function sendMessage(to, message) {
-  const url = `https://graph.facebook.com/v19.0/${PHONE_NUMBER_ID}/messages`;
+async function sendTemplateMessage(to, templateName) {
+  try {
+    const url = `https://graph.facebook.com/v22.0/${PHONE_NUMBER_ID}/messages`;
 
-  await axios.post(
-    url,
-    {
-      messaging_product: 'whatsapp',
-      to: to,
-      text: { body: message }
-    },
-    {
-      headers: {
-        Authorization: `Bearer ${WHATSAPP_TOKEN}`,
-        'Content-Type': 'application/json'
+    await axios.post(
+      url,
+      {
+        messaging_product: 'whatsapp',
+        to: to,
+        type: 'template',
+        template: {
+          name: templateName, // Nombre de tu plantilla en WhatsApp
+          language: { code: 'es' }
+        }
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${WHATSAPP_TOKEN}`,
+          'Content-Type': 'application/json'
+        }
       }
-    }
-  );
+    );
 
-  console.log('✅ Respuesta enviada a:', to);
+    console.log('✅ Plantilla enviada a:', to);
+  } catch (error) {
+    console.error('❌ Error enviando plantilla:', error.response?.data || error);
+  }
 }
 
 // -------------------------------
@@ -93,4 +98,5 @@ async function sendMessage(to, message) {
 app.listen(port, () => {
   console.log(`🚀 Server running on port ${port}`);
 });
+
 
