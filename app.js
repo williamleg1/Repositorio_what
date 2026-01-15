@@ -51,8 +51,8 @@ app.post('/', async (req, res) => {
     console.log('✉️ Texto:', text);
 
     // Respuesta con plantilla
-    await sendTemplateMessage(from, 'hello_world');
-
+    await sendTemplateMessage(from, 'saludo_inicial');
+    
     res.sendStatus(200);
   } catch (error) {
     console.error('❌ Error procesando mensaje:', error.response?.data || error);
