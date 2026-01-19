@@ -75,7 +75,7 @@ async function sendTemplateMessage(to, templateName) {
         type: 'template',
         template: {
           name: 'saludos_inciales', // Nombre de tu plantilla en WhatsApp
-          language: { code: 'es_CO' }
+          language: { code: 'en_US' }
         }
       },
       {
