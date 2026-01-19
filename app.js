@@ -50,9 +50,12 @@ app.post('/', async (req, res) => {
     console.log('📩 Mensaje de:', from);
     console.log('✉️ Texto:', text);
 
-    // Respuesta con plantilla
-    await sendTemplateMessage(from, 'saludos_inciales');
-    
+    // 👉 RESPUESTA CON TEXTO (SIN APROBACIÓN)
+    await sendTextMessage(
+      from,
+      'Hola 👋 ya recibí tu mensaje. ¿En qué puedo ayudarte?'
+    );
+
     res.sendStatus(200);
   } catch (error) {
     console.error('❌ Error procesando mensaje:', error.response?.data || error);
@@ -62,6 +65,7 @@ app.post('/', async (req, res) => {
 
 // -------------------------------
 // SEND TEMPLATE MESSAGE FUNCTION
+// (se deja intacta para usarla luego)
 // -------------------------------
 async function sendTemplateMessage(to, templateName) {
   try {
@@ -74,7 +78,7 @@ async function sendTemplateMessage(to, templateName) {
         to: to,
         type: 'template',
         template: {
-          name: 'saludos_inciales', // Nombre de tu plantilla en WhatsApp
+          name: 'saludos_inciales',
           language: { code: 'en_US' }
         }
       },
@@ -93,9 +97,41 @@ async function sendTemplateMessage(to, templateName) {
 }
 
 // -------------------------------
+// SEND TEXT MESSAGE FUNCTION
+// -------------------------------
+async function sendTextMessage(to, body) {
+  try {
+    const url = `https://graph.facebook.com/v22.0/${PHONE_NUMBER_ID}/messages`;
+
+    await axios.post(
+      url,
+      {
+        messaging_product: 'whatsapp',
+        to: to,
+        type: 'text',
+        text: {
+          body: body
+        }
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${WHATSAPP_TOKEN}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+
+    console.log('✅ Texto enviado a:', to);
+  } catch (error) {
+    console.error('❌ Error enviando texto:', error.response?.data || error);
+  }
+}
+
+// -------------------------------
 // START SERVER
 // -------------------------------
 app.listen(port, () => {
   console.log(`🚀 Server running on port ${port}`);
 });
+
 
